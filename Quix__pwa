@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz de Fases</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #ff7eb3, #ff758c);
+      color: #fff;
+    }
+    .container {
+      max-width: 700px;
+      margin: 40px auto;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.7);
+      border-radius: 15px;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    .question {
+      background: #fff;
+      color: #333;
+      margin-bottom: 20px;
+      padding: 15px;
+      border-radius: 10px;
+      transition: 0.3s;
+    }
+    .question.correct { background: #28a745; color: white; }
+    .question.incorrect { background: #dc3545; color: white; }
+    label { display: block; margin: 5px 0; cursor: pointer; }
+    button {
+      display: block;
+      margin: 20px auto;
+      padding: 12px 25px;
+      font-size: 18px;
+      border: none;
+      border-radius: 8px;
+      background: #ffd700;
+      color: #333;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover { background: #ffc107; }
+    #result {
+      text-align: center;
+      font-size: 24px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Desafio do Quiz</h1>
+    <h2 id="faseTitle">Fase 1</h2>
+    <form id="quizForm"></form>
+    <button id="submitBtn">Enviar Respostas</button>
+    <button id="nextPhaseBtn" style="display:none;">Próxima Fase</button>
+    <button id="restartBtn" style="display:none;">Tentar Novamente</button>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    const fases = [
+      {
+        titulo: "Fase 1",
+        perguntas: [
+          { text: "1. Qual é a cor do céu em um dia limpo?", options: ["Azul", "Verde", "Amarelo"], correct: "Azul" },
+          { text: "2. Quantos lados tem um quadrado?", options: ["3", "4", "5"], correct: "4" },
+          { text: "3. Qual animal é conhecido como o rei da selva?", options: ["Elefante", "Leão", "Cachorro"], correct: "Leão" },
+          { text: "4. O que é H2O?", options: ["Sal", "Água", "Açúcar"], correct: "Água" },
+          { text: "5. Qual é o maior planeta do Sistema Solar?", options: ["Terra", "Júpiter", "Marte"], correct: "Júpiter" },
+          { text: "6. Qual é a capital do Brasil?", options: ["Rio de Janeiro", "Brasília", "São Paulo"], correct: "Brasília" },
+          { text: "7. Quantas cores tem o arco-íris?", options: ["5", "6", "7"], correct: "7" },
+          { text: "8. Qual elemento dá cor verde às plantas?", options: ["Clorofila", "Oxigênio", "Glicose"], correct: "Clorofila" }
+        ]
+      },
+      {
+        titulo: "Fase 2",
+        perguntas: [
+          { text: "1. Qual órgão bombeia o sangue no corpo humano?", options: ["Fígado", "Pulmão", "Coração"], correct: "Coração" },
+          { text: "2. Qual planeta é conhecido como planeta vermelho?", options: ["Marte", "Saturno", "Vênus"], correct: "Marte" },
+          { text: "3. Qual é o menor continente?", options: ["África", "Austrália", "Europa"], correct: "Austrália" },
+          { text: "4. Qual inventor criou a lâmpada elétrica?", options: ["Edison", "Einstein", "Tesla"], correct: "Edison" },
+          { text: "5. Qual é o símbolo químico do ouro?", options: ["Ag", "Au", "Fe"], correct: "Au" },
+          { text: "6. Qual desses animais voa?", options: ["Galinha", "Pinguim", "Morcego"], correct: "Morcego" },
+          { text: "7. Qual desses é um gás?", options: ["Água", "Ar", "Areia"], correct: "Ar" },
+          { text: "8. Quantos segundos tem um minuto?", options: ["60", "100", "30"], correct: "60" }
+        ]
+      },
+      {
+        titulo: "Fase 3",
+        perguntas: [
+          { text: "1. Qual país é famoso pela Torre Eiffel?", options: ["Itália", "França", "Espanha"], correct: "França" },
+          { text: "2. Qual é o menor osso do corpo humano?", options: ["Fêmur", "Estribo", "Tíbia"], correct: "Estribo" },
+          { text: "3. Qual é o oceano mais profundo?", options: ["Atlântico", "Pacífico", "Índico"], correct: "Pacífico" },
+          { text: "4. Qual desses é um mamífero aquático?", options: ["Tubarão", "Golfinho", "Polvo"], correct: "Golfinho" },
+          { text: "5. Qual é a capital da Argentina?", options: ["Montevidéu", "Buenos Aires", "Lima"], correct: "Buenos Aires" },
+          { text: "6. Quem pintou a Mona Lisa?", options: ["Van Gogh", "Leonardo da Vinci", "Picasso"], correct: "Leonardo da Vinci" },
+          { text: "7. Qual é o principal gás do ar?", options: ["Oxigênio", "Hidrogênio", "Nitrogênio"], correct: "Nitrogênio" },
+          { text: "8. O que é um eclipse solar?", options: ["Lua entre Sol e Terra", "Sol entre Lua e Terra", "Terra entre Sol e Lua"], correct: "Lua entre Sol e Terra" }
+        ]
+      }
+    ];
+
+    let faseAtual = 0;
+
+    const form = document.getElementById('quizForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const nextPhaseBtn = document.getElementById('nextPhaseBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const resultDiv = document.getElementById('result');
+    const faseTitle = document.getElementById('faseTitle');
+
+    function renderQuiz() {
+      form.innerHTML = '';
+      resultDiv.textContent = '';
+      submitBtn.style.display = 'block';
+      nextPhaseBtn.style.display = 'none';
+      restartBtn.style.display = 'none';
+      faseTitle.textContent = fases[faseAtual].titulo;
+
+      fases[faseAtual].perguntas.forEach((q, i) => {
+        const div = document.createElement('div');
+        div.className = 'question';
+
+        const p = document.createElement('p');
+        p.textContent = q.text;
+        div.appendChild(p);
+
+        q.options.forEach(option => {
+          const optionId = `q${i}_${option.replace(/\s+/g, '')}`;
+          const radio = document.createElement('input');
+          radio.type = 'radio';
+          radio.name = `q${i}`;
+          radio.id = optionId;
+          radio.value = option;
+
+          const label = document.createElement('label');
+          label.setAttribute('for', optionId);
+          label.textContent = option;
+
+          div.appendChild(radio);
+          div.appendChild(label);
+        });
+
+        form.appendChild(div);
+      });
+    }
+
+    submitBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      let score = 0;
+
+      fases[faseAtual].perguntas.forEach((q, i) => {
+        const selected = form.querySelector(`input[name="q${i}"]:checked`);
+        const questionDiv = form.children[i];
+
+        if (selected) {
+          if (selected.value === q.correct) {
+            score++;
+            questionDiv.classList.add('correct');
+          } else {
+            questionDiv.classList.add('incorrect');
+          }
+        } else {
+          questionDiv.classList.add('incorrect');
+        }
+      });
+
+      submitBtn.style.display = 'none';
+
+      if (score >= 6) {
+        if (faseAtual === fases.length - 1) {
+          resultDiv.textContent = "🎉 Parabéns, você conseguiu passar todas as fases!! 🎉";
+        } else {
+          resultDiv.textContent = `Você acertou ${score} de 8! Excelente! Vamos para a próxima fase!`;
+          nextPhaseBtn.style.display = 'block';
+        }
+      } else {
+        resultDiv.textContent = `Você acertou ${score} de 8. Continue tentando até conseguir!`;
+        restartBtn.style.display = 'block';
+      }
+    });
+
+    nextPhaseBtn.addEventListener('click', () => {
+      faseAtual++;
+      renderQuiz();
+    });
+
+    restartBtn.addEventListener('click', () => {
+      renderQuiz();
+    });
+
+    // Inicializar
+    renderQuiz();
+  </script>
+</body>
+</html>
